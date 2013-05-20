@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 1.Logbacks Status Printer Status Messages and dynamic Log Configurations 
+	Logback includes a StatusPrinter: please add debug=”true” debug = “true” 
+	causes Logback at Startup to dump the Status of the configuration file – 
+	very handy. 2.Logback scans Configuration (automagically re-configuration) 
+	another very useful attribute is Scan=”true” scan=”true” allows you to change 
+	the Configuration File while your application is running – so its very easy 
+	to add a Class with Debug Level while testing a running application. If scan=”true” 
+	Logback scans for changes (default: every 60 seconds) and if Logback founds 
+	changes, Logback reconfigures itself I really like this feature. You can 
+	even register a status listener to supervise logbacks internal state. -->
+<configuration debug="true" scan="true">
+	<contextName>testLog</contextName>
+	<jmxConfigurator />
+
+	<timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss" />
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>%contextName %level %logger %msg%n</Pattern>
+		</layout>
+
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.xeustechnologies.jcl") &amp;&amp;
+					level &lt;= INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.apache.commons") &amp;&amp; level
+					&lt;= INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.springframework") &amp;&amp; level
+					&lt;= INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.apache.jcs") &amp;&amp; level &lt;=
+					INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+	</appender>
+
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>DEBUG</level>
+		</filter>
+		<!-- <filter class="ch.qos.logback.classic.filter.LevelFilter"> <level>DEBUG</level> 
+			<OnMismatch>DENY</OnMismatch> <OnMatch>ACCEPT</OnMatch> </filter> -->
+		<file>D:/logs/testlog-${bySecond}.log</file>
+
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<!--<Pattern>%date %level %logger{15} %msg [%thread] [%file:%line]%n</Pattern> -->
+			<Pattern>%date %contextName [%level][%logger{0}] %msg [%thread]
+				[%file:%line]%n</Pattern>
+		</layout>
+	</appender>
+	<!--mopper logger..start -->
+	<appender name="FILE-ERROR" class="ch.qos.logback.core.FileAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>ERROR</level>
+		</filter>
+		<file>D/logs/testlog-${bySecond}.log</file>
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<!--<Pattern>%date %level %logger{15} %msg [%thread] [%file:%line]%n</Pattern> -->
+			<!-- <Pattern>%date %contextName [%level][%logger{0}] %msg [%thread] [%file:%line]%n</Pattern> -->
+			<Pattern>%date %msg%n</Pattern>
+		</layout>
+	</appender>
+
+	<appender name="FILE_ROLL"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+		<file>D:/testlogback/testlogback.log</file>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>D:/testlogback/testlogback.log.%d{yyyyMMdd_HHmmss}</fileNamePattern>
+			<!-- maxHistory>30</maxHistory -->
+		</rollingPolicy>
+
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>INFO</level>
+		</filter>
+		<!-- <filter class="ch.qos.logback.classic.filter.LevelFilter"> <level>DEBUG</level> 
+			<OnMismatch>DENY</OnMismatch> <OnMatch>ACCEPT</OnMatch> </filter> -->
+
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<!--<Pattern>%date %level %logger{15} %msg [%thread] [%file:%line]%n</Pattern> -->
+			<Pattern>%date [%file:%line] [%level] %msg%n</Pattern>
+		</layout>
+	</appender>
+
+	<root level="TRACE">
+		<!-- <appender-ref ref="STDOUT" /> <appender-ref ref="multiplex" /> <appender-ref 
+			ref="FILE" /> -->
+	</root>
+
+	<logger name="testlogback">
+		<appender-ref ref="STDOUT" />
+		<!-- appender-ref ref="multiplex" / -->
+		<appender-ref ref="FILE_ROLL" />
+	</logger>
+
+	<!-- Logger name匹配包名 -->
+	<logger name="org.apache.jcs">
+		<level value="ERROR" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="com.mop">
+		<level value="DEBUG" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="com.google">
+		<level value="ERROR" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="net.rubyeye">
+		<level value="ERROR" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<!--mopper..logger..start -->
+	<logger name="com.mop.util.MopLogger">
+		<level value="ERROR" />
+		<appender-ref ref="FILE-ERROR" />
+	</logger>
+	<!--mopper..logger.end -->
+
+
+</configuration>

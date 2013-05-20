@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Socket sharing test</title>
+		<script type="text/javascript" src="/res/js/jquery-1.8.2.js"></script>
+		<script type="text/javascript" src="/res/js/portal.js"></script>
+		<script type="text/javascript">
+		$(function() {
+			var i = 1;
+
+			portal.open("/chat_2?id=ed84f5a4-0772-43c6-ba95-e293c287be7c&transport=sse&heartbeat=false&lastEventId=25&_=1333818006226",
+					{transports: ["sse", "stream"]},{
+				prepare: function(connect) {
+					$("<div />").text("preparing").appendTo("body");
+					connect();
+				}
+			})
+			.connecting(function() {
+				$("<div />").text(i++).appendTo("body");
+				$("<div />").text("Connecting with the transport [" + this.data("transport") + "]").appendTo("body");
+			})
+			.open(function() {
+				$("<div />").text("Opened").appendTo("body");
+				this.send("message", "Current timestamp: " + $.now())
+				.send("timestamp", null, "timestamp")
+				.send("exception", null, null, "exception")
+				.broadcast("greeting", "Hello from " + this.option("id"));
+			})
+			.message(function(data) {
+				$("<div />").text(data).appendTo("body");
+			})
+			.on("timestamp", function(ts) {
+				$("<div />").text("Current timestamp of the server: " + ts).appendTo("body");
+			})
+			.on("exception", function(message) {
+				$("<div />").text("Exception message from the server: " + message).appendTo("body");
+			})
+			.on("greeting", function(message) {
+				$("<div />").text("Greeting: " + message).appendTo("body");
+			})
+			.close(function(reason) {
+				$("<div />").text("Closed by the reason [" + reason + "]").appendTo("body");
+			});
+		});
+		
+
+		function send(){
+			portal.find().send("message","test talk to server ...");
+		}
+		</script>
+	</head>
+	<body>
+		<input id="sendMsg" type="button" value="test" onclick="javascript:send();"/>
+	</body>
+</html>

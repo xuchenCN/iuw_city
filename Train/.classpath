@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="target/classes" path="src/main/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/iuw_storage"/>
+	<classpathentry kind="lib" path="/iuw_redis_client/src/main/dependencies/spring-data-keyvalue-core-1.0.0.M1.jar"/>
+	<classpathentry kind="lib" path="/iuw_redis_client/src/main/dependencies/spring-data-redis-1.0.0.M1.jar" sourcepath="C:/Documents and Settings/xuchen/My Documents/Downloads/spring-data-redis-1.0.0.M1/spring-data-redis-1.0.0.M1/dist/spring-data-redis-1.0.0.M1-sources.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

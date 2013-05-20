@@ -1,0 +1,35 @@
+1、将settings.xml拷贝到C:\Documents and Settings\你的帐户\.m2\下,
+这里的pom.xml为父级配置，所以ums项目必须在此pom.xml的目录下进行创建
+pom.xml里为抽取的所有子项目共用信息，包括编译配置、插件配置、共用jar包等。
+
+2、进入命令行模式，cmd
+3、创建项目，例如创建影评模块,如下
+cd 到父pom.xml下，执行下面命令
+mvn archetype:create  -DgroupId=com.cn.ums -DartifactId=ums-comment -DarchetypeArtifactId=maven-archetype-webapp
+会生成文件夹名为ums-comment的文件夹及pom.xml文件和相关文件夹
+
+
+4、比较生避的jar，在maven库里查不到的，可添加自定义的jar文件，命令：
+mvn install:install-file -DgroupId=javax.transaction -DartifactId=jta -Dversion=1.1 -Dpackaging=jar -Dfile=c:\path\to\jar\jta-1.1-classes.jar
+
+5、maven2的使用
+
+常用命令
+
+a、打包  直接运行 mvn
+如果有新包未下载的，执行 mvn -P65
+注 -P 指的是调用配置文件profile标签，65为自定义的profile id
+
+b、生成eclipse项目文件
+mvn eclipse:eclipse 
+清除eclipse项目文件
+mvn eclipse:clean
+
+c、清除动态生成文件
+mvn clean
+
+
+6、添加依赖包时如果不知道怎么写配置，可以用包名到仓库里查询写法：
+http://mvnrepository.com/
+http://repo1.maven.org/maven2/
+

@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Built-By: chenxu
+Build-Jdk: 1.6.0_43
+Specification-Title: iuw_persistence
+Specification-Version: 0.0.1-SNAPSHOT
+Implementation-Title: iuw_persistence
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: com.iuwcity.persistence
+Bundle-ManifestVersion: 2
+Bundle-Name: iuw_persistence
+Bundle-SymbolicName: iuw_persistence
+Bundle-Vendor: 
+Bundle-Version: 0.0.1-SNAPSHOT
+Created-By: Maven Integration for Eclipse
+Eclipse-SourceBundle: iuw_persistence;version="0.0.1-SNAPSHOT";roots:=
+ "."
+

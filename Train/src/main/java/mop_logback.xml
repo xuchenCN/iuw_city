@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+	1.Logbacks Status Printer
+	Status Messages and dynamic Log Configurations
+	Logback includes a StatusPrinter: please add debug=”true” 
+	
+	debug = “true” causes Logback at Startup to 
+	dump the Status of the configuration file – very handy.
+	
+	2.Logback scans Configuration (automagically re-configuration)
+	another very useful attribute is Scan=”true”
+	
+	scan=”true” allows you to change the Configuration File 
+	while your application is running – 
+	so its very easy to add a Class with Debug Level while testing a running application. 
+	
+	If scan=”true” Logback scans for changes (default: every 60 seconds) 
+	and if Logback founds changes, Logback reconfigures itself  
+	I really like this feature.
+	
+	You can even register a status listener to supervise logbacks internal state.
+-->
+<configuration debug="true" scan="true">	
+	<contextName>dzh-newera</contextName>
+	<jmxConfigurator />
+	
+	<timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/>
+
+    <appender name="STDOUT"
+        class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%contextName %level %logger %msg%n</Pattern>
+        </layout>
+        
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.xeustechnologies.jcl") &amp;&amp; level &lt;= INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.apache.commons") &amp;&amp; level &lt;= INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.springframework") &amp;&amp; level &lt;= INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<expression>logger.contains("org.apache.jcs") &amp;&amp; level &lt;= INFO</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+    </appender>
+    
+	<!-- RemoteHost can be set as ${host} refers per ex. to -Dhost=localhost
+	you can use more then one hosts: localhost, 10.42.42.42 -->
+	<appender name="multiplex"
+		class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>WARN</level>
+		</filter>
+		<!--过滤任务调度框架日志-->
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<!-- defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
+				<expression>logger.contains("org.quartz")</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<!--过滤Apache类库产生的大量日志-->
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<!-- defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
+				<expression>logger.contains("org.apache")</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<!--过滤掉过多的Spring日志-->
+		<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+			<evaluator>
+				<!-- defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
+				<expression>logger.contains("org.springframework")</expression>
+			</evaluator>
+			<OnMismatch>NEUTRAL</OnMismatch>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		
+		<Compressing>true</Compressing>
+		<!-- will automatically use correct default port -->
+		<ReconnectionDelay>10000</ReconnectionDelay>
+		<IncludeCallerData>true</IncludeCallerData>
+		<RemoteHosts>localhost, 10.2.4.105</RemoteHosts>
+		<ApplicationIdentifier>${logback.application}</ApplicationIdentifier>
+		<encoding>UTF-8</encoding>
+	</appender>
+    
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>DEBUG</level>
+		</filter>
+		<!--
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>DEBUG</level>
+			<OnMismatch>DENY</OnMismatch>
+			<OnMatch>ACCEPT</OnMatch>
+		</filter>
+		-->
+        <file>./logs/dzh-newera-${bySecond}.log</file>
+		
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <!--<Pattern>%date %level %logger{15} %msg [%thread] [%file:%line]%n</Pattern>-->
+			<Pattern>%date %contextName [%level][%logger{0}] %msg [%thread] [%file:%line]%n</Pattern>
+        </layout>
+    </appender>
+    <!--mopper logger..start-->  
+		<appender name="FILE-ERROR" class="ch.qos.logback.core.FileAppender">  
+			  <filter class="ch.qos.logback.classic.filter.ThresholdFilter">   
+				<level>ERROR</level>
+			 </filter>   
+			 <file>./WEB-INF/logs/mopperclick.log</file> 
+			<layout class="ch.qos.logback.classic.PatternLayout">
+            	<!--<Pattern>%date %level %logger{15} %msg [%thread] [%file:%line]%n</Pattern>-->
+				<!-- <Pattern>%date %contextName [%level][%logger{0}] %msg [%thread] [%file:%line]%n</Pattern> -->
+				<Pattern>%date %msg%n</Pattern>
+        	</layout>
+		</appender>    
+    <root level="TRACE"> 
+        <appender-ref ref="STDOUT" />
+		<appender-ref ref="multiplex" /> 
+		<appender-ref ref="FILE" />
+    </root>
+	<!-- Logger name匹配包名 -->
+	<logger name="org.apache.jcs">
+		<level value="ERROR" />
+		<appender-ref ref="FILE" />
+	</logger> 
+	
+	<logger name="com.mop">
+		<level value="DEBUG" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="com.google">
+		<level value="ERROR" />
+		<appender-ref ref="FILE" />
+	</logger>
+   	<logger name="net.rubyeye">
+		<level value="ERROR" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+    <!--mopper..logger..start-->
+	<logger name="com.mop.util.MopLogger">
+		<level value="ERROR" />
+		<appender-ref ref="FILE-ERROR" />
+	</logger>
+	<!--mopper..logger.end-->
+
+
+</configuration>

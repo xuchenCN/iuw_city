@@ -1,0 +1,358 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.iuwcity.persistence</groupId>
+	<artifactId>iuw_persistence</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<parent>
+		<groupId>iuw_maven</groupId>
+		<artifactId>iuw_maven</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../iuw_maven/pom.xml</relativePath>
+	</parent>
+
+
+
+	<properties>
+		<environment>development</environment>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java-api.version>1.6</java-api.version>
+
+		<!-- LATEST, RELEASE -->
+		<dependency.version>LATEST</dependency.version>
+
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>development</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<environment>development</environment>
+				<dependency.version>LATEST</dependency.version>
+			</properties>
+		</profile>
+		<profile>
+			<id>test</id>
+			<properties>
+				<environment>test</environment>
+				<dependency.version>LATEST</dependency.version>
+			</properties>
+		</profile>
+		<profile>
+			<id>production</id>
+			<properties>
+				<environment>production</environment>
+				<dependency.version>RELEASE</dependency.version>
+			</properties>
+		</profile>
+	</profiles>
+
+	<build>
+		<filters>
+			<filter>src/main/filters/filter-jdbc-${environment}.properties</filter>
+		</filters>
+		<resources>
+			<!-- 处理本地依赖 packaged-resources -->
+			<resource>
+				<directory>src/main/dependencies</directory>
+				<filtering>false</filtering>
+				<targetPath>lib</targetPath>
+			</resource>
+			<!-- 给开发和发布版使用 -->
+			<resource>
+				<directory>src/main/config</directory>
+				<filtering>true</filtering>
+				<!-- 默认为${project.build.directory}/classes, 如果使用${project.build.directory}会导致source:jar生产的jar内包含磁盘上的绝对路径 -->
+				<targetPath>config</targetPath>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.4.3</version>
+				<configuration>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+				<executions>
+					<execution>
+						<!-- 给test使用 non-packaged-resources -->
+						<id>copy-resources</id>
+						<!-- here the phase you need -->
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/test-classes/config</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/config</directory>
+									<filtering>true</filtering>
+									<excludes>
+										<exclude>**/*.java</exclude>
+									</excludes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<!-- 复制本地依赖 non-packaged-resources -->
+						<id>copy-dependencies-resources</id>
+						<!-- here the phase you need -->
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/${artifactId}-${version}/lib</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/dependencies</directory>
+									<filtering>false</filtering>
+									<includes>
+										<include>**/*.jar</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<compilerVersion>${java-api.version}</compilerVersion>
+					<source>${java-api.version}</source>
+					<target>${java-api.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- 打源代码包 -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1.1</version>
+				<configuration>
+					<archive>
+						<manifestFile>src/main/java/META-INF/MANIFEST.MF</manifestFile>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							<!-- <mainClass>com.someclass.Main</mainClass> <packageName>com.someclass</packageName> -->
+						</manifest>
+						<manifestEntries>
+							<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+							<Bundle-Name>${project.name}</Bundle-Name>
+							<Bundle-SymbolicName>${project.artifactId}.source</Bundle-SymbolicName>
+							<Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+							<Bundle-Version>${project.version}</Bundle-Version>
+							<Eclipse-SourceBundle>${project.artifactId};version="${project.version}";roots:="."</Eclipse-SourceBundle>
+						</manifestEntries>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<encoding>${project.build.sourceEncoding}</encoding>
+							<excludeResources>false</excludeResources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- 打javadoc包 -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+					<show>public</show>
+					<nohelp>false</nohelp>
+					<excludePackageNames>
+						com.mop.dzh.util.*:com.mop.dzh.persistence.*
+					</excludePackageNames>
+					<archive>
+						<manifestFile>src/main/java/META-INF/MANIFEST.MF</manifestFile>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							<!-- <mainClass>com.someclass.Main</mainClass> <packageName>com.someclass</packageName> -->
+						</manifest>
+						<manifestEntries>
+							<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+							<Bundle-Name>${project.name}</Bundle-Name>
+							<Bundle-SymbolicName>${project.artifactId}.javadoc</Bundle-SymbolicName>
+							<Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+							<Bundle-Version>${project.version}</Bundle-Version>
+							<Eclipse-SourceBundle>${project.artifactId};version="${project.version}";roots:="."</Eclipse-SourceBundle>
+						</manifestEntries>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<encoding>${project.build.sourceEncoding}</encoding>
+							<!-- <charset>${project.build.sourceEncoding}</charset> -->
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<archive>
+						<manifestFile>src/main/java/META-INF/MANIFEST.MF</manifestFile>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							<!-- <mainClass>com.someclass.Main</mainClass> <packageName>com.someclass</packageName> -->
+						</manifest>
+						<manifestEntries>
+							<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+							<Bundle-Name>${project.name}</Bundle-Name>
+							<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+							<Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+							<Bundle-Version>${project.version}</Bundle-Version>
+							<Eclipse-SourceBundle>${project.artifactId};version="${project.version}";roots:="."</Eclipse-SourceBundle>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-scm-plugin</artifactId>
+				<version>1.4</version>
+				<configuration>
+					<connectionType>developerconnection</connectionType>
+				</configuration>
+			</plugin>
+			
+		</plugins>
+	</build>
+
+	<dependencies>
+
+		<!-- dependency> <groupId>com.mop</groupId> <artifactId>querymap</artifactId> 
+			<version>${mop.querymap.version}</version> <scope>compile</scope> <exclusions> 
+			<exclusion> <groupId>org.springframework</groupId> <artifactId>spring-jdbc</artifactId> 
+			</exclusion> </exclusions> </dependency -->
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+
+		<!-- Test jars -->
+		<!-- dependency> <groupId>com.mop</groupId> <artifactId>utils</artifactId> 
+			<version>${mop.utils.version}</version> <classifier>tests</classifier> <scope>test</scope> 
+			</dependency -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- 测试运行时需要比编译时依赖更多的springframework包 -->
+		<dependency>
+			<artifactId>spring-aop</artifactId>
+			<groupId>org.springframework</groupId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<artifactId>spring-expression</artifactId>
+			<groupId>org.springframework</groupId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<artifactId>spring-asm</artifactId>
+			<groupId>org.springframework</groupId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		
+		<!-- 保证顺序敏感的测试用例可以按预设顺序执行. 官方仅支持到Junit3.8 -->
+		<!-- dependency>
+			<groupId>gsbase</groupId>
+			<artifactId>gsbase</artifactId>
+			<scope>test</scope>
+		</dependency -->
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.iuwcity.storage</groupId>
+			<artifactId>iuw_storage</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.mop</groupId>
+			<artifactId>querymap</artifactId>
+		</dependency>
+
+	</dependencies>
+
+
+	<!-- <repositories> <repository> <id>projectlombok.org</id> <url>http://projectlombok.org/mavenrepo</url> 
+		</repository> </repositories> -->
+
+
+	<!-- scm> <scm:cvs:pserver:${scm.username}@10.3.48.45:2407/home/mopcvs:dzh_newera_persistence> 
+		<connection>scm:svn:http://scm.mop.com/svn/dzh/dzh_newera_persistence/trunk/</connection> 
+		<developerConnection>scm:svn:http://scm.mop.com/svn/dzh/dzh_newera_persistence/trunk/</developerConnection> 
+		</scm -->
+
+
+	<!-- distributionManagement>
+		<repository>
+			<id>release</id>
+			<name>nexus</name>
+			<url>http://127.0.0.1:8081/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>nexus</name>
+			<url>http://127.0.0.1:8081/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement -->
+
+</project>

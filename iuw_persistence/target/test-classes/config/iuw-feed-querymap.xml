@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE query-map-sql PUBLIC
+   "-//Opi crop //DTD query-map-sql XML V1.0//EN"
+   "http://txt.mop.com/commons/dtds/query-map-sql.dtd">
+
+<!-- config:设置, 主要目的是将数据源自动映射到语句上, 在程序里使用语句名即可获得数据源 -->
+<config>
+	<!-- group:语句分组, 为了更方便地将数据源绑定到语句(可以在数据源配置里引用一整组语句), 所以分组 -->
+
+	<group name="iuw_feed_read_group">
+		<statement name="FeedDAO.SelectAll">
+			SELECT id, user_id, content, STATUS, create_time, relation FROM feed limit ?,?
+		</statement>
+		
+		<statement name="FeedDAO.CountAll">
+			SELECT count(1) FROM feed
+		</statement>
+		
+	</group>
+
+	<group name="iuw_feed_write_group">
+		<statement name="FeedDAO.Insert">
+			INSERT INTO feed (id, user_id, content, STATUS, create_time, relation)VALUES(?, ?, ?, ?, ?, ?);
+		</statement>
+	</group>
+
+	<!-- datasource:数据源, 在这里显示地将语句分组绑定到数据源 -->
+	<datasource name="datasourceSlave">
+
+		<group>iuw_feed_read_group</group>
+	</datasource>
+
+	<datasource name="datasource">
+
+		<group>iuw_feed_write_group</group>
+
+	</datasource>
+
+</config>

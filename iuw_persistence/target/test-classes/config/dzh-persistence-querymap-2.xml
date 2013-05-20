@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE query-map-sql PUBLIC 
+	"-//Opi crop //DTD query-map-sql XML V1.0//EN"
+	"http://txt.mop.com/commons/dtds/query-map-sql.dtd">
+
+	<!-- config:设置, 主要目的是将数据源自动映射到语句上, 在程序里使用语句名即可获得数据源 -->
+<config>
+	<group name="subjectStatementGroup_read">
+		<statement name="GET_USER_LAST_SUBJECT">
+			SELECT * FROM subject_all WHERE user_id=?
+			ORDER BY id ASC LIMIT 0 ,1 
+		</statement>
+
+		<statement name="SubjectDZHDAO_getPostTypeList">
+			SELECT * FROM plate_dic WHERE main_id = ?
+		</statement>
+		<statement name="SubjectDZHDAO.listSubjectSpecialBySubjectId">
+			SELECT
+			id ,subject_id ,key_floor , reward_mp , reward_floor ,click_num ,serial_time ,body
+			,user_id ,
+			user_name ,real_name ,reply_time ,ip ,send_mp ,exam ,color ,is_hidden , FLOOR ,3g_msg ,save1
+			FROM
+			mop.subject_special
+			WHERE subject_id = ? ORDER BY serial_time DESC
+		</statement>
+		<statement name="LIST_TOP_REPLY_BY_SUBJECT_ID">
+			SELECT id,
+			subject_id, key_floor,reward_mp,reward_floor,click_num,serial_time,
+			body,user_id,user_name,real_name,
+			reply_time, ip, send_mp,exam,color,is_hidden,FLOOR, 3g_msg,save1
+			FROM
+			subject_special
+			WHERE subject_id
+			= ? ORDER BY id
+		</statement>
+
+	</group>
+
+	<group name="subjectStatementGroup_write">
+		<statement name="SubjectDZHDAO.addReadNum">
+			UPDATE subject_all SET read_num = read_num +
+			1 WHERE id=?;
+		</statement>
+
+		<statement name="SubjectDZHDAO.addFocusNum">
+			UPDATE subject_all SET focus_num = focus_num
+			+ 1 WHERE id=?;
+		</statement>
+
+		<statement name="SubjectDZHDAO.addShareNum">
+			UPDATE subject_all SET share_num = share_num
+			+ 1 WHERE id=?;
+		</statement>
+
+		<statement name="SubjectDZHDAO.addCopyNum">
+			UPDATE subject_all SET copy_num = copy_num +
+			1 WHERE id=?;
+		</statement>
+
+		<statement name="SubjectDZHDAO.addSubjectSpecial">
+			INSERT INTO mop.subject_special
+			(subject_id ,key_floor ,reward_mp , reward_floor ,click_num
+			,serial_time ,body ,
+			user_id ,user_name ,real_name ,reply_time ,ip ,send_mp ,exam ,color ,is_hidden ,
+			FLOOR , 3g_msg
+			,save1)VALUES(? ,? ,? ,? ,? ,? ,? ,? ,? ,? , ? ,? ,? ,? ,? , ? , ? , ? , ?);
+		</statement>
+	</group>
+
+	<group name="UserStatementGroup_read">
+		<statement name="USERDAO_GETUSERBYID">
+			SELECT * FROM user WHERE id=? ;
+		</statement>
+		<statement name="USERDAO_GETUSER_BYUSERNAME">
+			SELECT * FROM user WHERE user_name = ?;
+		</statement>
+		<statement name="USERDAO_GETALLUSERS">
+			SELECT * FROM user ;
+		</statement>
+		<statement name="USERDAO_GETALLUSERROLES">
+			SELECT r.*,ur.main_plate_id FROM role r , user_role ur WHERE
+			ur.user_id = ? AND ur.role_id =
+			r.role_id ;
+		</statement>
+		<statement name="USERDAO_GETALLUSERROLES_INPLATE">
+			SELECT r.*,ur.main_plate_id FROM role r, user_role ur
+			WHERE ur.user_id = ?
+			AND
+			ur.main_plate_id = ?
+			AND
+			ur.role_id = r.role_id;
+		</statement>
+		<!-- 是否需要 -->
+		<statement name="ROLEDAO_GETALLROLES">
+			SELECT * FROM role ;
+		</statement>
+		<statement name="ROLEDAO_GETALLROLEPERMISSION">
+			SELECT p.* FROM permission p ,
+			role_permission rp WHERE rp.role_id = ? AND
+			rp.permission_id =
+			p.permission_id;
+		</statement>
+		<statement name="PERMISSIONDAO_GETALLPERMISSION">
+			SELECT * FROM permission ;
+		</statement>
+		<statement name="PERMISSIONDAO_GETALLUSERPERMISSION">
+			SELECT DISTINCT p.*,r1.main_plate_id FROM
+			(SELECT r.*,ur.main_plate_id FROM
+			role r , user_role
+			ur
+			WHERE ur.user_id = ? AND
+			ur.role_id = r.role_id
+			) r1,permission p ,
+			role_permission rp
+
+			WHERE rp.role_id = r1.role_id
+			AND rp.permission_id =
+			p.permission_id ORDER
+			BY permission_id;
+		</statement>
+		<statement name="PERMISSIONDAO_GETPERMISSIONS_BYUSERID">
+			SELECT p.*
+			FROM permission p,role_permission rp,user_role ur
+			WHERE p.permission_id =
+			rp.permission_id
+			AND rp.role_id = ur.role_id
+			AND ur.user_id = ?
+			AND ur.main_plate_id = ?;
+		</statement>
+		<statement name="USERDAO_GETUSERS_FORALLROLE">
+			SELECT r.role_id,r.role_name,u.id,u.user_name
+			FROM role r,user u,user_role ur,admin_log al
+			WHERE r.role_id = ur.role_id
+			AND u.id = ur.user_id
+			GROUP BY role_id,id
+			ORDER BY r.role_id desc
+		</statement>
+		<statement name="USERDAO_GETUSERS_BYROLENAME">
+			SELECT u.*
+			FROM user u,role r,user_role ur
+			WHERE ur.user_id = u.id
+			AND ur.role_id = r.role_id
+			AND r.role_name = ?
+			GROUP BY u.user_name
+		</statement>
+		<statement name="ROLEDAO_GETROLES_BYUSERNAME">
+			SELECT r.*
+			FROM role r,user u,user_role ur
+			WHERE ur.role_id = r.role_id
+			AND ur.user_id = u.id
+			AND u.user_name = ?
+			GROUP BY r.role_id
+		</statement>
+		<statement name="LOGDAO_GETADMINLOG_BYROLENAME">
+			SELECT al.*
+			FROM admin_log al,role r,user_role ur
+			WHERE ur.role_id = r.role_id
+			AND ur.user_id =
+			al.admin_id
+			AND r.role_name = ?
+			AND log_time BETWEEN ? AND ?
+			GROUP BY id
+		</statement>
+		<statement name="LOGDAO_GETADMINLOG_BYUSERNAME">
+			SELECT *
+			FROM admin_log
+			WHERE admin_id = (
+			SELECT id
+			FROM user
+			WHERE user_name = ?
+			LIMIT 1
+			)
+			AND
+			log_time BETWEEN ? AND ?;
+		</statement>
+		<statement name="LOGDAO_GETADMINLOG_FORALL">
+			SELECT *
+			FROM admin_log
+			WHERE log_time BETWEEN ? AND ?
+		</statement>
+		<statement name="USERDAO_GETUSERMANAGE_BY_OP">
+			SELECT * FROM user_manager WHERE operation = ? LIMIT ?,?;
+		</statement>
+
+		<statement name="USERDAO_GETUSERMANAGE_BY_OP_COUNT">
+			SELECT count(id) FROM user_manager WHERE operation = ? 
+		</statement>
+
+		<statement name="USERDAO_GETUSERMANAGE_BY_OP_CONDITION">
+			SELECT * FROM user_manager WHERE operation = ? AND ip=? OR target=? LIMIT ?,?;
+		</statement>
+
+		<statement name="USERDAO_GETUSERMANAGE_BY_OP_CONDITION_COUNT">
+			SELECT count(id) FROM user_manager WHERE operation = ? AND ip=? OR target=?;
+		</statement>
+
+		<statement name="USERDAO_GETUSERMANAGE_BY_DATE">
+			SELECT * FROM user_manager WHERE begin_time &gt; ? AND end_time &lt; ? LIMIT ?,?
+		</statement>
+
+		<statement name="USERDAO_GETUSERMANAGE_BY_DATE_COUNT">
+			SELECT count(id) FROM user_manager WHERE begin_time &gt; ? AND end_time &lt; ?
+		</statement>
+
+		<statement name="UserDao.checkUserFree">
+			SELECT count(id) FROM user_manager WHERE (operation = ? AND ip=? OR target=?) AND end_time
+			is null ;
+		</statement>
+
+		<!-- 四期相关 -->
+		<statement name="UserDAO.loadScoreLevel">
+			SELECT * FROM scores_levels
+		</statement>
+
+		<statement name="UserDAO.getUserAwardById">
+			SELECT a.* FROM mop_award a, user_award u WHERE u.user_id =? AND u.type=? AND a.id =
+			u.award_id 
+		</statement>
+
+		<statement name="UserDAO.getUserCurrentAward">
+			SELECT a.* FROM mop_award a, user_award u WHERE u.user_id =? AND u.type=? AND a.id =
+			u.award_id AND u.flag = 1
+		</statement>
+
+		<statement name="UserDAO.getAllAward">
+			SELECT * FROM mop_award 
+		</statement>
+
+		<statement name="UserDAO.getAwardById">
+			SELECT * FROM mop_award WHERE id = ?
+		</statement>
+		<statement name="UserDAO.getLevelOp">
+			SELECT o.* from level_op l, mop_user_pm o WHERE l.level = ? AND l.op_id = o.id
+		</statement>
+
+		<statement name="UserDAO.getAllOp">
+			SELECT * FROM mop_user_op 
+		</statement>
+
+		<statement name="UserDAO.getAllUserPm">
+			SELECT * FROM mop_user_pm
+		</statement>
+
+		<statement name="UserDAO.getAllAction">
+			SELECT * FROM mop_action 
+		</statement>
+
+		<statement name="UserDAO.getOpAction">
+			SELECT mop_action.* FROM op_action , mop_action WHERE op_action.op_id = ? AND
+			op_action.act_id = mop_action.id
+		</statement>
+	</group>
+
+
+	<group name="UserStatementGroup_write">
+		<statement name="USERDAO_GET_USERS_BY_ROLEID">
+			SELECT u.*
+			FROM user_role ur,user u
+			WHERE ur.user_id = u.id
+			AND ur.role_id = ?
+			order by ur.id
+			desc
+		</statement>
+		<statement name="ROLEDAO_ADDROLE">
+			INSERT INTO role(role_name,limit_flag,create_id) VALUES(?,?,?);
+		</statement>
+		<statement name="ROLEDAO_ASSIGNUSER_ROLES">
+			INSERT INTO user_role(user_id,role_id,give_time,give_id,main_plate_id)VALUES(?,?,now(),?,?);
+		</statement>
+
+		<statement name="ROLEDAO_DELETEUSER_ROLES">
+			DELETE FROM user_role
+			WHERE user_id = ? AND main_plate_id = ?;
+		</statement>
+
+		<statement name="ROLEDAO_ASSIGNROLE_PERMISSIONS">
+			INSERT INTO role_permission(
+			role_id,
+			permission_id,
+			give_time,
+			give_id
+			) VALUES(?,?,now(),?);
+		</statement>
+
+		<statement name="ROLEDAO_DELETEROLE_PERMISSIONS">
+			DELETE FROM role_permission WHERE role_id = ?;
+		</statement>
+		<statement name="LOGDAO_ADDADMINLOG">
+			INSERT INTO admin_log(admin,admin_id,ip,operation,target,detail,log_time,score)
+			VALUES(?,?,?,?,?,?,NOW(),?)
+		</statement>
+		<statement name="UserDao.releaseUser.admin">
+			UPDATE user_manager SET liberate_admin = ? ,liberate_admin_id = ? ,end_time = ? WHERE
+			target_id = ? AND end_time is null
+		</statement>
+		<statement name="UserDao.releaseIp.admin">
+			UPDATE user_manager SET liberate_admin = ? ,liberate_admin_id = ? ,end_time = ? WHERE ip = ?
+			AND end_time is null
+		</statement>
+		<statement name="UserDao.updateBlackList.user">
+			UPDATE user SET black_list_flag = ? WHERE id=?
+		</statement>
+		<statement name="UserDao.insertUserManager">
+			INSERT INTO user_manager
+			(begin_time,detail,end_time,ip,liberate_admin,liberate_admin_id,operation,operation_admin,operation_admin_id,target,target_id)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?);
+		</statement>
+		<statement name="USERDAO_UPDATEUSER_STATUS">
+			UPDATE user SET black_list_flag = ? WHERE id = ?
+		</statement>
+		<statement name="UserDAO.delUserCurrentAward">
+			update user_award set flag = 0 WHERE user_id =? AND type = ?
+		</statement>
+		<statement name="UserDAO.setUserCurrentAward">
+			update user_award set flag = 1 WHERE user_id =? AND award_id = ?
+		</statement>
+		<statement name="userDAO.addNewUser">
+			INSERT INTO mop.user
+			(id,user_name,admin_pwd,auth_score,
+			login_ip,role,union_id,union_title,fee_reply,
+			fee_reply_remain,SIGN,shit_sign,cure_time,has_waist,is_hidden,score )
+			VALUES( ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+		</statement>
+		<statement name="UserDAO.addOpAction">
+			INSERT INTO op_action (op_id, act_id) VALUES( ?,? );
+		</statement>
+		<statement name="UserDAO.delOpAction">
+			DELETE FROM op_action WHERE act_id = ?
+		</statement>
+		<statement name="UserDAO.delAction">
+			DELETE FROM mop_action WHERE id = ?
+		</statement>
+		<statement name="UserDAO.delAllOpAction">
+			DELETE FROM op_action WHERE op_id = ? 
+		</statement>
+		<statement name="USERDAO_UPDATE_TITLE">
+			UPDATE user SET title = ? WHERE id = ?
+		</statement>
+		<statement name="USERDAO_UPDATE_MEDAL">
+			UPDATE user SET medal = ? WHERE id = ?
+		</statement>
+		<statement name="UserDAO.updateUserScoreById">
+			UPDATE user SET score =? WHERE id = ?
+		</statement>
+		<statement name="USERDAO_SAVE_REPORT">
+			INSERT INTO mp_change(user_name,target_name,change_mp,detail,flag,related_id,ip,TIME)
+			VALUES(?,?,?,?,?,?,?,NOW())
+		</statement>
+		<statement name="UserDAO.addAction">
+			insert into mop_action
+			(target,target_type,target_attr,value,ex_count, descri,
+			op_id,cdt,cdt_val)
+			values(?,?,?,?,?,?,?,?,?);
+		</statement>
+		<statement name="UserDAO.updateAction">
+			UPDATE mop_action
+			SET
+			target = ? ,target_type = ? ,target_attr =? ,VALUE = ? ,ex_count = ?
+			,descri = ? ,op_id =? ,
+			cdt = ? ,cdt_val = ?
+			WHERE
+			id = ?;
+		</statement>
+		<statement name="UserDAO.addLevelOp">
+			INSERT INTO level_op
+			(level, op_id) VALUES (?, ?);
+		</statement>
+		<statement name="UserDAO.delLevelOp">
+			DELETE FROM level_op WHERE level = ?
+		</statement>
+		<statement name="UserDAO.delAwardById">
+			DELETE FROM mop_award WHERE id = ? 
+		</statement>
+		<statement name="UserDAO.delAwardById:user">
+			DELETE FROM user_award WHERE id = ? 
+		</statement>
+		<statement name="UserDAO.addNewAwardForUser">
+			INSERT INTO user_award
+			(user_id,award_id,type)VALUES(?,?,?);
+		</statement>
+		<statement name="UserDAO.addNewAward">
+			INSERT INTO mop_award
+			(name,type, descri, award_descri,url,color,score,mp )
+			VALUES(?,?,?,?,?,?,?,?);
+		</statement>
+		<statement name="UserDAO.delUserAward">
+			DELETE FROM user_award
+			WHERE
+			user_id = ? AND award_id = ? ;
+		</statement>
+		<statement name="UserDAO.delAllUserAward">
+			DELETE FROM user_award
+			WHERE
+			user_id = ? AND type = ? ;
+		</statement>
+		<statement name="UserDAO.updateAward">
+			UPDATE mop_award SET name = ? , type = ? ,descri = ? ,award_descri = ? ,url = ? ,color = ?,
+			score=?,mp=?
+			WHERE id = ? ;
+		</statement>
+		<statement name="UserDAO.addLevel">
+			INSERT INTO scores_levels
+			(scores1,scores2,level) VALUES (?,?,?);
+		</statement>
+		<statement name="UserDAO.updateLevel">
+			UPDATE scores_levels SET scores1 = ? , scores2 = ? WHERE level = ? ;
+		</statement>
+	</group>
+
+	<!-- 回复 -->
+	<group name="ReplyStatementGroup_read">
+		<statement name="replyExam.select">
+			SELECT * FROM reply_exam WHERE main_plate=? AND sub_plate=? limit ?,?
+		</statement>
+
+		<statement name="replyExam.count">
+			SELECT COUNT(*) FROM reply_exam WHERE main_plate=? AND sub_plate=? 
+		</statement>
+	</group>
+
+	<group name="ReplyStatementGroup_write">
+		<statement name="replyExam.insert">
+			INSERT INTO reply_exam
+			(
+			id,body,cai,color,ding,exam,
+			floor,hidden_flag,ip,mobile_msg,real_name,
+			reply_time,send_mp,subject_id,super_flag,user_id,
+			user_name,main_plate,sub_plate
+			)
+			VALUES
+			(
+			?,?,?,?,?,
+			?,?,?,?,?,
+			?,?,?,?,?,
+			?,?,?,?
+			)
+		</statement>
+
+		<statement name="replyExam.delete">
+			DELETE FROM reply_exam WHERE id=? AND subject_id = ?
+		</statement>
+	</group>
+
+	<!-- 联盟相关 -->
+	<group name="UnionStatement_read">
+		<statement name="GET_UNION_BY_ID">
+			SELECT * FROM UNION_INFO WHERE ID = ?
+		</statement>
+		<statement name="GET_UNION_BY_NAME">
+			SELECT * FROM UNION_INFO WHERE UNION_NAME = ? AND STATUS!=4
+		</statement>
+		<statement name="GET_UNION_MODIFY">
+			SELECT * FROM UNION_INFO WHERE STATUS=5
+		</statement>
+		<statement name="GET_UNION_NOT_AUDIT">
+			SELECT * FROM
+			UNION_INFO where STATUS=0 limit ? ,?		
+		</statement>
+		<statement name="GET_UNION_NOT_AUDIT_COUNT">
+			SELECT COUNT(ID) FROM UNION_INFO where STATUS=0		
+		</statement>
+		<statement name="LIST_UNION_IMPERSSION">
+			SELECT * FROM UNION_IMPRESSION WHERE UNION_ID = ? ORDER BY CLICK_NUM LIMIT ?, ?;
+		</statement>
+		<statement name="GET_UNION_IMPERSSION_BY_ID">
+			SELECT ID,UNION_ID,DESCRIPTION,CLICK_NUM,CREATE_TIME FROM UNION_IMPRESSION
+			WHERE ID = ?		
+		</statement>
+		<statement name="GET_UNION_IMPRESSION_CLICK_HISTORY">
+			SELECT count(ID) FROM UNION_IMPRESSION_CLICK_HISTORY WHERE ID = ?;
+		</statement>
+		<statement name="CHECK_USER_IMPRESSION_CLICK_HISTORY">
+			SELECT count(ID) FROM UNION_IMPRESSION_CLICK_HISTORY WHERE ID = ? AND USER_ID = ?;
+		</statement>
+		<statement name="LIST_UNION">
+			SELECT ID,UNION_NAME,LOGO_URL,UNION_INTRO,MASTER_ID,MASTER_NAME,AUDIT_FLAG,
+			MAX_MENBER,
+			STATUS,CREATE_TIME,POST_NUM,ELITE_NUM,MENBER_NUM,RECENT_POST_NUM,
+			RECENT_MEMBER_NUM,LAST_UPDATE_TIME,REPLY_NUM,MODIFY_TIME
+			FROM
+			UNION_INFO
+			LIMIT ?, ?;
+		</statement>
+		<statement name="COUNT_UNION">
+			SELECT count(ID) FROM UNION_INFO WHERE STATUS = 1 OR STATUS = 3 OR STATUS = 5
+		</statement>
+		<statement name="LIST_UNION_ID_ORDER_BY_CREATE_TIME">
+			SELECT ID,UNION_NAME,LOGO_URL,UNION_INTRO,MASTER_ID,MASTER_NAME,AUDIT_FLAG,
+			MAX_MENBER,
+			STATUS, CREATE_TIME,POST_NUM,ELITE_NUM, MENBER_NUM, RECENT_POST_NUM,
+			RECENT_MEMBER_NUM,LAST_UPDATE_TIME,
+			REPLY_NUM,MODIFY_TIME
+			FROM
+			UNION_INFO WHERE STATUS = 1 OR STATUS = 3 OR STATUS = 5 ORDER BY CREATE_TIME DESC
+		</statement>
+		<statement name="LIST_UNION_ID_ORDER_BY_STAT">
+			SELECT ID,UNION_NAME,LOGO_URL,UNION_INTRO,MASTER_ID,MASTER_NAME,AUDIT_FLAG,
+			MAX_MENBER,
+			STATUS, CREATE_TIME,POST_NUM,ELITE_NUM,MENBER_NUM,RECENT_POST_NUM,
+			RECENT_MEMBER_NUM,LAST_UPDATE_TIME,REPLY_NUM,MODIFY_TIME
+			FROM
+			UNION_INFO WHERE STATUS = 1 OR STATUS = 3 OR STATUS = 5
+			ORDER BY (RECENT_MEMBER_NUM + RECENT_POST_NUM + REPLY_NUM) DESC
+		</statement>
+		<statement name="CHECK_BLACK_LIST">
+			SELECT count(ID) FROM UNION_BLACK_LIST WHERE OWNER_ID = ? AND UNION_ID = ?  
+		</statement>
+		<statement name="QUERY_BLACK_LIST">
+			SELECT ID,OPERATOR_ID,OPERATOR_NAME,UNION_ID,OWNER_ID,OWNER_NAME,OPERATING_TIME
+			FROM
+			UNION_BLACK_LIST
+			WHERE UNION_ID = ?
+			LIMIT ?, ?;
+		</statement>
+		<statement name="GET_UNION_STAT_BY_ID">
+			SELECT UNION_ID,POST_NUM,ELITE_NUM, MENBER_NUM, RECENT_POST_NUM,RECENT_MEMBER_NUM,
+			LAST_UPDATE_TIME,REPLY_NUM
+			FROM
+			UNION_STAT
+			WHERE
+			UNION_ID = ?
+		</statement>
+		<statement name="QUERY_USER_PERMISSIONS">
+			select up.*
+			from UNION_USER_PERMISSION uup,UNION_PERMISSION up
+			where uup.permission_id = up.id
+			and uup.user_id = ?
+			and uup.union_id = ?
+		</statement>
+		<statement name="QUERY_USER_PERMISSIONS_ID">
+			select permission_id
+			from UNION_USER_PERMISSION
+			where user_id = ?
+			and union_id = ?
+		</statement>
+		<statement name="QUERY_USER_PERMISSIONS_COUNT">
+			select count(*)
+			from UNION_USER_PERMISSION
+			where user_id = ?
+			AND union_id = ?
+		</statement>
+		<statement name="COMPARE_USER_PERMISSION">
+			SELECT COUNT(*)
+			FROM UNION_USER_PERMISSION
+			WHERE user_id = ?
+			AND union_id = ?
+			AND permission_id
+			= ?
+		</statement>
+		<statement name="QUERY_UNION_ADMIN">
+			select *
+			from UNION_ADMIN
+			where union_id = ?
+		</statement>
+		<statement name="QUERY_UNION_ADMIN_ID">
+			select user_id
+			from UNION_ADMIN
+			where union_id = ?
+		</statement>
+		<statement name="QUERY_UNION_BY_ADMIN">
+			select union_id
+			from UNION_ADMIN
+			where user_id = ?
+			group by union_id
+		</statement>
+		<statement name="QUERY_APPLIED_UNION">
+			select ui.*
+			from UNION_AUDIT ua, UNION_INFO ui
+			where ua.union_id = ui.id
+			and ua.user_id = ?
+		</statement>
+		<statement name="QUERY_UNION_BY_OWNER">
+			select *
+			from UNION_INFO
+			where master_id = ?
+		</statement>
+		<statement name="QUERY_USER_APPLICATION">
+			select user_id
+			from UNION_AUDIT
+			where union_id = ?
+			and flag = 0
+		</statement>
+
+		<statement name="QUERY_USER_APPLICATION_COUNT">
+			select count(*)
+			from UNION_AUDIT
+			where union_id = ?
+		</statement>
+		<statement name="QUERY_UNION_ADMIN_BY_USER_ID">
+			select user_id
+			from UNION_ADMIN
+			where user_id = ?
+			and union_id = ?
+		</statement>
+	</group>
+
+	<group name="UnionStatement_write">
+		<statement name="ADD_UNION_IMPRESSION_CLICK_HISTORY">
+			INSERT INTO UNION_IMPRESSION_CLICK_HISTORY
+			(
+			USER_ID,UNION_ID,UNION_IMPRESSION_ID,CLICK_TIME,SESSION_ID)
+			VALUES
+			(?, ?, ?, ?, ? );
+		</statement>
+		<statement name="INSERT_UNION_ADMIN">INSERT INTO UNION_ADMIN (USER_ID, UNION_ID, JOIN_TIME) VALUES (?,?,NOW())</statement>
+		<statement name="DELETE_UNION_ADMIN">DELETE FROM UNION_ADMIN WHERE USER_ID = ? AND UNION_ID = ?</statement>
+		<statement name="SET_USER_APPLICATION">
+			update UNION_AUDIT
+			set flag = ?
+			where union_id = ?
+			and user_id = ?
+		</statement>
+		<statement name="INSERT_USER_APPLICATION">
+			insert into UNION_AUDIT(
+			union_id,
+			user_id,
+			flag,
+			apply_time
+			)
+			values(?,?,0,now())
+		</statement>
+		<statement name="DEL_UNION_IMPRESSION_CLICK_HISTORY">
+			DELETE FROM UNION_IMPRESSION_CLICK_HISTORY WHERE UNION_ID = ?
+		</statement>
+		<statement name="UPDATE_UNION">
+			UPDATE UNION_INFO
+			SET
+			UNION_NAME = ?, LOGO_URL = ? ,UNION_INTRO = ? ,MASTER_ID = ?
+			,MASTER_NAME = ? ,AUDIT_FLAG = ? , MAX_MENBER = ? ,STATUS = ?, CREATE_TIME = ?,POST_NUM = ? ,
+			ELITE_NUM = ? ,
+			MENBER_NUM = ? ,
+			RECENT_POST_NUM =? ,
+			RECENT_MEMBER_NUM = ?,LAST_UPDATE_TIME =?,REPLY_NUM=?,MODIFY_TIME=?
+			WHERE
+			ID = ? ;
+		</statement>
+		<statement name="UPDATE_UNION_IMPERSSION">
+			UPDATE UNION_IMPRESSION SET UNION_ID = ? , DESCRIPTION = ? ,CLICK_NUM = ?, CREATE_TIME = ?
+			WHERE ID = ? ;
+		</statement>
+		<statement name="ADD_NEW_UNION_IMPERSSION">
+			INSERT INTO UNION_IMPRESSION
+			(UNION_ID,DESCRIPTION,CLICK_NUM, CREATE_TIME ) VALUES
+			( ?, ?, ?,?
+			);
+		</statement>
+		<statement name="DEL_UNION_IMPERSSION">
+			DELETE FROM UNION_IMPRESSION WHERE ID = ?;
+		</statement>
+
+		<statement name="CLEAR_USER_PERMISSIONS">
+			delete from UNION_USER_PERMISSION where user_id = ?
+		</statement>
+		<statement name="SET_USER_PERMISSIONS">
+			insert into UNION_USER_PERMISSION(user_id,union_id,permission_id,type) values(?,?,?,?)
+		</statement>
+		<statement name="ADD_BLACK_LIST">
+			INSERT INTO UNION_BLACK_LIST
+			(
+			OPERATOR_ID, OPERATOR_NAME, UNION_ID, OWNER_ID, OWNER_NAME,
+			OPERATING_TIME )
+			VALUES (
+			?, ?, ?, ?, ?, ?);
+		</statement>
+		<statement name="DEL_BLACK_LIST">
+			DELETE FROM UNION_BLACK_LIST
+			WHERE
+			OWNER_ID = ? AND UNION_ID = ?  
+		</statement>
+		<statement name="UPDATE_UNION_STATUS">
+			UPDATE UNION_INFO SET STATUS=? where ID=? 		
+		</statement>
+		<statement name="DEL_UNION">
+			DELETE FROM UNION_INFO WHERE ID = ?;
+		</statement>
+		<statement name="ADD_NEW_UNION">
+			INSERT INTO UNION_INFO
+			(UNION_NAME, LOGO_URL,UNION_INTRO, MASTER_ID, MASTER_NAME, AUDIT_FLAG,
+			MAX_MENBER, STATUS, CREATE_TIME,POST_NUM,
+			ELITE_NUM,
+			MENBER_NUM,
+			RECENT_POST_NUM,
+			RECENT_MEMBER_NUM,
+			LAST_UPDATE_TIME,
+			REPLY_NUM,MODIFY_TIME
+			)
+			VALUES
+			(?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?,?,?,?);
+		</statement>
+		<statement name="QUERY_FORWARDABLE_UNION">
+			SELECT ui.*
+			FROM UNION_INFO ui,UNION_PERMISSION up,UNION_USER_PERMISSION uup
+			WHERE
+			ui.MASTER_ID = ?
+			OR (
+			uup.PERMISSION_ID = 1000
+			AND uup.UNION_ID = ui.ID
+			AND uup.USER_ID = ?
+			)
+			GROUP BY ui.ID
+		</statement>
+		<statement name="DELETE_UNION_APPLICATION">
+			delete from UNION_AUDIT
+			where user_id = ?
+			and union_id = ?
+		</statement>
+
+		<statement name="ADD_UNION_LOG">
+
+			INSERT INTO mop.UNION_OP_LOG
+			(
+			OPERATOR_ID,OPERATOR_NAME,UNION_ID,OWNER_ID,OWNER_NAME,OPERATING_TIME,DESCRIPTION,LOG_TYPE,DETAIL_TYPE
+			)
+			VALUES
+			(?,?,?,?,?,?,?,?,?);
+		</statement>
+
+
+	</group>
+
+	<!-- datasource:数据源, 在这里显示地将语句分组绑定到数据源 -->
+</config>

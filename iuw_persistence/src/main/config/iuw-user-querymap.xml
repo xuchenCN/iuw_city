@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE query-map-sql PUBLIC
+   "-//Opi crop //DTD query-map-sql XML V1.0//EN"
+   "http://txt.mop.com/commons/dtds/query-map-sql.dtd">
+
+<!-- config:设置, 主要目的是将数据源自动映射到语句上, 在程序里使用语句名即可获得数据源 -->
+<config>
+	<!-- group:语句分组, 为了更方便地将数据源绑定到语句(可以在数据源配置里引用一整组语句), 所以分组 -->
+
+	<group name="iuw_user_read_group">
+		<statement name="UserInfoDAO.SelectAll">
+			SELECT id, NAME, age, sex, create_time, last_login_date,STATUS,	head_img,password FROM user_info limit ?,?
+		</statement>
+		
+		<statement name="UserInfoDAO.CountAll">
+			SELECT count(1) FROM user_info
+		</statement>
+		
+	</group>
+
+	<group name="iuw_user_write_group">
+		<statement name="UserInfoDAO.Insert">
+			INSERT INTO user_info (id, NAME, age, sex, create_time, last_login_date,STATUS,	head_img,password)VALUES(?,?,?,?,?,?,?,?,?);
+		</statement>
+	</group>
+
+	<!-- datasource:数据源, 在这里显示地将语句分组绑定到数据源 -->
+	<datasource name="datasourceSlave">
+
+		<group>iuw_user_read_group</group>
+	</datasource>
+
+	<datasource name="datasource">
+
+		<group>iuw_user_write_group</group>
+
+	</datasource>
+
+</config>

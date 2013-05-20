@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE query-map-sql PUBLIC
+   "-//Opi crop //DTD query-map-sql XML V1.0//EN"
+   "http://txt.mop.com/commons/dtds/query-map-sql.dtd">
+
+<config>
+
+	<!-- 自动映射语句, 只有涉及拆表的语句才能不分组(自动映射) -->
+	<statement name="SubjectDao.getReply-replyTitle" hashed="true">
+		SELECT reply_title as replyTitle from reply r where
+		r.subject_id=?
+	</statement>
+	<statement name="SubjectDao.saveReply" hashed="true">
+		INSERT INTO reply
+		(subject_id, reply_title, reply_content)
+		VALUES
+		(?, ?, ?)
+	</statement>
+	<statement name="LIST_TOP_REPLY" hashed="true">
+		SELECT * FROM reply WHERE subject_id = ? AND answer_mp > 0
+		LIMIT ?,? 
+	</statement>
+
+	<statement name="LIST_REPLY_BY_USER_ID">
+		SELECT * FROM reply WHERE subject_id = ? AND user_id = ? ORDER BY id LIMIT ?,?
+	</statement>
+	<statement name="COUNT_REPLY_BY_USER_ID">
+		SELECT count(*) FROM reply WHERE subject_id = ? AND user_id = ?
+	</statement>
+
+	<statement name="ADD_FOCUS">
+		INSERT INTO focus (user_id,subject_id,notice_time) VALUES (?,?,?)
+	</statement>
+	<statement name="DEL_FOCUS">
+		DELETE FROM focus WHERE user_id = ? AND subject_id = ?
+	</statement>
+
+	<statement name="GET_FOCUS">
+		SELECT * FROM focus WHERE user_id = ? AND subject_id = ? 
+	</statement>
+
+	<statement name="LIST_FOCUS_SUBJECT_BY_USER_ID">
+		SELECT * FROM focus WHERE user_id = ? order by notice_time desc LIMIT ?,?
+	</statement>
+
+	<statement name="COUNT_FOCUS_SUBJECT_BY_USER_ID">
+		SELECT count(id) FROM focus WHERE user_id = ? 
+	</statement>
+	<statement name="IS_FOCUSED">
+		SELECT count(id) FROM focus WHERE user_id = ? AND subject_id = ?
+	</statement>
+
+	<statement name="ADD_UNION_SUBJECT">
+		INSERT INTO UNION_SUBJECT
+		(
+		SUBJECT_ID, UNION_ID, ELITE_FLAG, TOPMOST_FLAG, SAVE
+		)VALUES(?,?,?,?,?);
+	</statement>
+
+	<statement name="DEL_UNION_SUBJECT">
+		DELETE FROM UNION_SUBJECT WHERE UNION_ID = ? AND SUBJECT_ID = ?
+	</statement>
+
+	<statement name="LIST_UNION_SUBJECT_BY_POST">
+		SELECT s.id , us.SUBJECT_ID , us.UNION_ID , us.ELITE_FLAG , us.TOPMOST_FLAG , us.SAVE ,
+		s.attrib , s.color , s.flag , s.kind , s.last_reply_time , s.main_plate , s.offer_mp , s.post_time , s.reply_num ,
+		s.receive_mp , s.score1 , s.score2 , s.shengdan , s.sub_plate , s.title,s.last_reply_user_id,s.last_reply_user_name
+
+		FROM
+		UNION_SUBJECT us , subject_all s
+		WHERE us.UNION_ID = ? AND s.id = us.SUBJECT_ID AND s.exam = 2
+		ORDER BY s.post_time DESC
+
+		LIMIT ?, ?;
+	</statement>
+
+	<statement name="LIST_UNION_SUBJECT_BY_REPLY">
+		SELECT s.id , us.SUBJECT_ID , us.UNION_ID , us.ELITE_FLAG , us.TOPMOST_FLAG , us.SAVE ,
+		s.attrib , s.color , s.flag , s.kind , s.last_reply_time , s.main_plate , s.offer_mp , s.post_time , s.reply_num ,
+		s.receive_mp , s.score1 , s.score2 , s.shengdan , s.sub_plate , s.title, s.last_reply_user_id,s.last_reply_user_name
+
+		FROM
+		UNION_SUBJECT us , subject_all s
+		WHERE us.UNION_ID = ? AND s.id = us.SUBJECT_ID AND s.exam = 2
+		ORDER BY s.last_reply_time DESC
+
+		LIMIT ?, ?;
+	</statement>
+
+	<statement name="UPDATE_UNION_SUBJECT">
+		UPDATE UNION_SUBJECT
+		SET
+		ELITE_FLAG = ? ,
+		TOPMOST_FLAG = ? ,
+
+		WHERE
+		UNION_ID = ? AND SUBJECT_ID = ?
+		;
+	</statement>
+	
+	<statement name="SELECT_UNION_SUBJECT_ELITE">
+		SELECT SUBJECT_ID FROM  UNION_SUBJECT
+		WHERE ELITE_FLAG = 1 AND UNION_ID = ?  ;
+	</statement>
+
+	<!-- 拆分的表 -->
+	<table name="reply" shardkey="subject_id">
+		<!-- 拆分策略, 计算拆分后的地址 -->
+		<policy name="modulo" class="com.mop.querymap.sql.ShardPolicyImplModulo">
+			<delimiter>_</delimiter>
+			<n>100</n>
+		</policy>
+		<!-- 地址与数据源映射 -->
+		<map>
+			<address-set>1,2,3,4,5,6,7,8,9,10</address-set>
+			<!-- 引用其他配置文件中定义的数据源 -->
+			<datasource>subject</datasource>
+		</map>
+		<map>
+			<address-set>11-100</address-set>
+			<datasource>subject2</datasource>
+		</map>
+		<map slave="true">
+			<address-set>1-50</address-set>
+			<!-- 引用其他配置文件中定义的数据源 -->
+			<datasource>subjectSlave</datasource>
+		</map>
+		<map slave="true">
+			<address-set>51-100</address-set>
+			<datasource>subject2Slave</datasource>
+		</map>
+	</table>
+	<table name="focus" shardkey="user_id">
+		<policy name="modulo" class="com.mop.querymap.sql.ShardPolicyImplModulo">
+			<delimiter>_</delimiter>
+			<n>100</n>
+		</policy>
+		<map>
+			<address-set>1-50</address-set>
+			<datasource>subject</datasource>
+		</map>
+		<map>
+			<address-set>51-100</address-set>
+			<datasource>subject2</datasource>
+		</map>
+		<map slave="true">
+			<address-set>1-50</address-set>
+			<datasource>subjectSlave</datasource>
+		</map>
+		<map slave="true">
+			<address-set>51-100</address-set>
+			<datasource>subject2Slave</datasource>
+		</map>
+	</table>
+
+	<table name="UNION_SUBJECT" shardkey="UNION_ID">
+		<policy name="modulo" class="com.mop.querymap.sql.ShardPolicyImplModulo">
+			<delimiter>_</delimiter>
+			<n>10</n>
+		</policy>
+		<map>
+			<address-set>1-10</address-set>
+			<datasource>subject</datasource>
+		</map>
+		<map slave="true">
+			<address-set>1-10</address-set>
+			<datasource>subjectSlave</datasource>
+		</map>
+
+	</table>
+
+
+
+	<!-- 必须保证:从数据源的名称以Slave结尾, 以Slave结尾的数据一定是从数据源 -->
+	<datasource name="subject">
+	</datasource>
+	<datasource name="subjectSlave">
+	</datasource>
+	<datasource name="subject2">
+	</datasource>
+	<datasource name="subject2Slave">
+	</datasource>
+</config>

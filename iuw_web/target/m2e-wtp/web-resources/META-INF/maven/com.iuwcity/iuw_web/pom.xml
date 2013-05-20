@@ -1,0 +1,223 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.iuwcity</groupId>
+	<artifactId>iuw_web</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+
+	<parent>
+		<groupId>iuw_maven</groupId>
+		<artifactId>iuw_maven</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../iuw_maven/pom.xml</relativePath>
+	</parent>
+
+	<properties>
+		<jetty.env.file>src/main/resources/jetty7-env.xml</jetty.env.file>
+	</properties>
+
+
+	<build>
+
+		<resources>
+			<!-- 处理本地依赖 -->
+			<resource>
+				<directory>src/main/dependencies</directory>
+				<filtering>false</filtering>
+				<targetPath>${basedir}/src/main/webapp/WEB-INF/lib</targetPath>
+			</resource>
+			<resource>
+				<directory>src/main/dependencies</directory>
+				<filtering>false</filtering>
+				<targetPath>${project.build.directory}/${project.artifactId}-${project.version}/WEB-INF/lib</targetPath>
+			</resource>
+			<!-- 给开发和发布版使用 -->
+			<resource>
+				<directory>src/main/config</directory>
+				<filtering>true</filtering>
+				<!-- <targetPath>${project.build.directory}/${groupId}-${artifactId}/WEB-INF/config</targetPath> -->
+				<targetPath>${basedir}/src/main/webapp/WEB-INF/config</targetPath>
+			</resource>
+			<!-- 给test使用 -->
+			<resource>
+				<directory>src/main/config</directory>
+				<filtering>true</filtering>
+				<targetPath>${project.build.directory}/test-classes/config</targetPath>
+			</resource>
+		</resources>
+
+
+		<plugins>
+			<plugin>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>7.2.2.v20101205</version>
+				<!-- 8.0.0.M2 -->
+				<configuration>
+					<webAppSourceDirectory>${basedir}/src/main/webapp</webAppSourceDirectory>
+					<webAppConfig>
+						<contextPath>/</contextPath>
+						<descriptor>src/main/webapp/WEB-INF/web.xml</descriptor>
+						<!-- 外部配置文件与jetty版本耦合, 更新jetty版本时勿忘更新配置 -->
+						<jettyEnvXml>${jetty.env.file}</jettyEnvXml>
+						<!-- 允许运行时修改js, css等静态资源 - useFileMappedBuffer改为false. 此文件从org/eclipse/jetty/jetty-webapp/${jetty.version}/jetty-webapp-${jetty.version}.jar提取 -->
+						<defaultsDescriptor>src/main/resources/jetty7-webdefault.xml</defaultsDescriptor>
+					</webAppConfig>
+					<!-- 设置需谨慎 <classesDirectory>${basedir}/src/main/webapp/WEB-INF/classes</classesDirectory> -->
+					<scanIntervalSeconds>3</scanIntervalSeconds>
+					<scanTargets>
+						<scanTarget>src/resources</scanTarget>
+						<scanTarget>src/dice_functions.tld</scanTarget>
+					</scanTargets>
+					<scanTargetPatterns>
+						<scanTargetPattern>
+							<directory>src/main/config</directory>
+							<includes>
+								<include>**/*.xml</include>
+								<include>**/*.properties</include>
+							</includes>
+							<excludes>
+								<exclude>**/myspecial.xml</exclude>
+								<exclude>**/myspecial.properties</exclude>
+							</excludes>
+						</scanTargetPattern>
+					</scanTargetPatterns>
+					<connectors>
+						<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+							<port>8080</port>
+							<maxIdleTime>60000</maxIdleTime>
+							<!-- 防止浏览器提交的请求header过大导致请求被据绝(http:413) -->
+							<headerBufferSize>16192</headerBufferSize>
+						</connector>
+					</connectors>
+					<systemProperties>
+						<!-- <systemProperty> <name>app.root</name> <value>${basedir}/src/main/webapp</value> 
+							</systemProperty> <systemProperty> <name>logback.configurationFile</name> 
+							<value>${basedir}/src/main/webapp/WEB-INF/config/logback.xml</value> </systemProperty> -->
+						<systemProperty>
+							<name>logback.application</name>
+							<value>DZH</value>
+						</systemProperty>
+						<!-- <systemProperty> reform为配合道具接口发布的SNAPSHOT版本jar需要此环境变量 <name>REFORM_TEST</name> 
+							<value>true</value> </systemProperty> -->
+					</systemProperties>
+				</configuration>
+				<executions>
+					<execution>
+						<id>start-jetty</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<scanIntervalSeconds>0</scanIntervalSeconds>
+							<daemon>true</daemon>
+						</configuration>
+					</execution>
+					<execution>
+						<id>stop-jetty</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+
+		<!-- Spring -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-orm</artifactId>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.googlecode.xmemcached</groupId>
+			<artifactId>xmemcached</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+		</dependency>
+
+		<!-- iuw -->
+		<dependency>
+			<groupId>com.iuwcity.service</groupId>
+			<artifactId>iuw_service</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.iuwcity.storage</groupId>
+			<artifactId>iuw_storage</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.iuwcity.client</groupId>
+			<artifactId>iuw_redis_client</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.iuwcity.client</groupId>
+			<artifactId>iew_memcached_client</artifactId>
+		</dependency>
+
+		<!-- dependency> <groupId>com.iuwcity.client</groupId> <artifactId>iuw_neo4j_client</artifactId> 
+			</dependency -->
+
+		<dependency>
+			<groupId>com.iuwcity.persistence</groupId>
+			<artifactId>iuw_persistence</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.mop</groupId>
+			<artifactId>querymap</artifactId>
+		</dependency>
+
+	</dependencies>
+
+</project>

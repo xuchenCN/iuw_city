@@ -1,0 +1,6 @@
+
+不要把此目录设为SourceFolder.
+设为SourceFolder会导致配置文件被复制到classpath.
+
+此目录内的配置文件会自动复制到WEB_INF/config, 复制过程中会根据filter内容自动修改.
+如果设为SourceFolder会出现两份配置文件, 在classpath下的文件没有经过过滤, 会有错误.

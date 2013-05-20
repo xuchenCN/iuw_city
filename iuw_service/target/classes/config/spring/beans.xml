@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+	   	http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+       	http://www.springframework.org/schema/context
+       	http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       	http://www.springframework.org/schema/util
+       	http://www.springframework.org/schema/util/spring-util-2.5.xsd
+       	http://www.springframework.org/schema/jee
+       	http://www.springframework.org/schema/jee/spring-jee-2.5.xsd
+       	http://www.springframework.org/schema/tx
+       	http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       	http://www.springframework.org/schema/aop
+    	http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+
+
+	<context:annotation-config />
+	<context:component-scan base-package="com.iuwcity"/>
+	
+	<!-- redis config -->
+	<bean id="redisPoolConfig" class="com.iuwcity.redis.JedisPoolConfig">
+		<!-- Action to take when trying to acquire a connection and all connections 
+			are taken -->
+		<property name="whenExhaustedAction">
+			<!-- Fail-fast behaviour, we don't like to keep the kids waiting -->
+			<util:constant
+				static-field="org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL" />
+			<!-- Default behaviour, block the caller until a resource becomes available -->
+			<!--<util:constant static-field="org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_BLOCK" 
+				/> -->
+		</property>
+		<!-- Maximum active connections to Redis instance -->
+		<property name="maxActive" value="10" />
+		<!-- Number of connections to Redis that just sit there and do nothing -->
+		<property name="maxIdle" value="5" />
+		<!-- Minimum number of idle connections to Redis - these can be seen as 
+			always open and ready to serve -->
+		<property name="minIdle" value="1" />
+		<!-- Tests whether connection is dead when connection retrieval method 
+			is called -->
+		<property name="testOnBorrow" value="true" />
+		<!-- Tests whether connection is dead when returning a connection to the 
+			pool -->
+		<property name="testOnReturn" value="true" />
+		<!-- Tests whether connections are dead during idle periods -->
+		<property name="testWhileIdle" value="true" />
+		<!-- Maximum number of connections to test in each idle check -->
+		<property name="numTestsPerEvictionRun" value="10" />
+		<!-- Idle connection checking period -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		<!-- Maximum time, in milliseconds, to wait for a resource when exausted 
+			action is set to WHEN_EXAUSTED_BLOCK -->
+		<property name="maxWait" value="3000" />
+	</bean>
+
+
+	<bean id="redisConnectionPool" class="redis.clients.jedis.JedisPool"
+		destroy-method="destroy">
+		<constructor-arg index="0" ref="redisPoolConfig" />
+		<constructor-arg index="1" value="127.0.0.1" />
+		<constructor-arg index="2" value="6379" />
+	</bean>
+	
+	<bean id="redisService" class="com.iuwcity.redis.service.RedisServiceImpl">
+		<property name="pool" ref="redisConnectionPool" />
+	</bean>
+	
+	<!-- memcached config -->
+	<bean name="memcachedClient" 
+                class="net.rubyeye.xmemcached.utils.XMemcachedClientFactoryBean" destroy-method="shutdown"> 
+          <property name="servers"> 
+             <value>127.0.0.1:11211</value> 
+          </property> 
+          <property name="connectionPoolSize" value="3"></property> 
+    	  <property name="commandFactory">
+    	  		<bean class="net.rubyeye.xmemcached.command.BinaryCommandFactory"/>
+    	  </property>
+    </bean>
+    
+    <bean id="memcachedService" class="com.iuwcity.memcached.client.MemcachedClientManager">
+		<property name="client" ref="memcachedClient" />
+	</bean>
+	
+	<!-- bean id="neo4jService" class="com.iuwcity.neo4j.service.Neo4jServiceImpl" >
+		 <property name="dbPath" value="D:/iuwcity_neo4j_db"></property> 
+	</bean -->
+	
+</beans>

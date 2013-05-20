@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE query-map-sql PUBLIC
+   "-//Opi crop //DTD query-map-sql XML V1.0//EN"
+   "http://txt.mop.com/commons/dtds/query-map-sql.dtd">
+
+	<!-- config:设置, 主要目的是将数据源自动映射到语句上, 在程序里使用语句名即可获得数据源 -->
+<config>
+	<!-- group:语句分组, 为了更方便地将数据源绑定到语句(可以在数据源配置里引用一整组语句), 所以分组 -->
+	<group name="subjectGroup_read">
+		<!--
+			statement:语句, 语句命名约定:语句名=Dao名(或语句所属的类名) + '.' + 语句所属的方法名 + '-' +
+			其他必要说明
+		-->
+		<!-- 遵守语句命名约定在程序中引用语句时不易出错, 也可以更方便地在程序中找到使用语句的地方 -->
+		<statement name="SELECT_USERS_SUBJECT_ALL">
+			select * from subject_all s where
+			s.user_id=?
+		</statement>
+		
+		<statement name="GET_SUBJECT_BY_ID">
+			select * from subject_all s where
+			s.id=?
+		</statement>
+		
+		<statement name="statementGroup2_statement1">
+			SELECT subject_id as subjectId from subject
+			s where s.subject_title=?
+		</statement>
+		<statement name="statementGroup2_statement2">
+			SELECT subject_title as subjectTitle from
+			subject s where s.subject_id=?
+		</statement>
+		
+		<statement name="statementGroup3_statement1">
+			SELECT item_id as itemId from subject i
+			where i.item_name=?
+		</statement>
+		<statement name="statementGroup3_statement2">
+			SELECT item_name as itemName from subject i
+			where i.item_id=?
+		</statement>
+	
+		
+	</group>
+	
+	
+	<group name="cmsGroup_read">
+		<statement name="SQL_CMS_GET_FRAGMENT">
+			SELECT * from dzh_cms where id=?
+		</statement>
+		<statement name="SQL_CMS_GET_FRAGMENT_BY_TYPE">
+			SELECT * from dzh_cms where type=? and flag =?
+		</statement>
+		<statement name="SQL_CMS_GET_FRAGMENT_LIST">
+			SELECT * from dzh_cms where type=?
+		</statement>
+		
+		<statement name="SQL_CMS_GET_FRAGMENT_DETAIL_PIC">
+			SELECT * from dzh_cms_detail where fragment_id=? AND flag =1
+		</statement>
+		<statement name="SQL_CMS_GET_FRAGMENT_DETAIL_HISTORY_PIC">
+			SELECT * from dzh_cms_detail_history where fragment_id=? AND save_date =? AND flag =1
+		</statement>
+		<statement name="SQL_CMS_GET_FRAGMENT_DETAIL_LINK">
+			SELECT * from dzh_cms_detail where fragment_id=? AND flag = 2
+		</statement>
+		<statement name="SQL_CMS_GET_FRAGMENT_DETAIL_HISTORY_LINK">
+			SELECT * from dzh_cms_detail_history where fragment_id=? AND save_date =? AND flag = 2
+		</statement>
+		
+		<statement name="SQL_MANAGER_SELECT">
+			SELECT count(id) FROM subject_cms WHERE subject_id=? and flag =1
+		</statement>
+		
+
+		<statement name="subjectDao.getSubjectCmsBySubjectId">
+			SELECT * FROM subject_cms WHERE subject_id =?
+		</statement>
+		
+	</group>
+	
+	<group name="cmsGroup_write">
+		<statement name="SQL_CMS_UPDATE_FRAGMENT">
+			UPDATE dzh_cms set update_time=? where id=?
+		</statement>
+		<statement name="SQL_CMS_INSERT_FRAGMENT">
+			INSERT INTO dzh_cms(type,name,add_time,pic_num,link_num,flag) values(?,?,?,?,?,?) 
+		</statement>
+		<statement name="SQL_CMS_DEL_FRAGMENT">
+			DELETE FROM dzh_cms where id =?  
+		</statement>
+		<statement name="SQL_CMS_INSERT_FRAGMENT_DETAIL">
+			INSERT INTO dzh_cms_detail
+			(
+			fragment_id ,
+			url ,
+			title ,
+			flag ,
+			pic_path
+			)
+			VALUES
+			(
+			? ,
+			? ,
+			? ,
+			? ,
+			?
+			)
+		</statement>
+		<statement name="SQL_CMS_UPDATE_FRAGMENT_DETAIL">
+			UPDATE dzh_cms_detail SET url=? , title=? ,pic_path=? WHERE id=?
+		</statement>
+		
+		<statement name="SQL_MANAGER_INSERT">
+			INSERT INTO subject_cms(subject_id,flag,entry_time) VALUES (?,1,?)
+		</statement>
+		<statement name="SQL_MANAGER_UPDATE">
+			UPDATE subject_cms SET entry_time=? WHERE subject_id=? and flag =1
+		</statement>
+		
+		<statement name="SQL_INSERT_HISTORY">
+			INSERT INTO dzh_cms_detail_history(fragment_id,url,title,flag,pic_path,save_date) SELECT fragment_id,url,title,flag,pic_path,CURRENT_DATE FROM dzh_cms_detail;
+		</statement>
+	</group>
+	
+	<group name="buoyGroup_read">
+		<statement name="SQL_BUOY_GET_LIST">
+			SELECT * from subject_life where top_flag=? and main_plate=?
+			order by float_time desc ,last_time  limit ?,?
+		</statement>
+		<statement name="SQL_BUOY_GET_LIST_CANDIDATE">
+			SELECT * from subject_life where top_flag=? and main_plate=? and float_time =0
+			order by  last_time  limit ?,?
+		</statement>
+		<statement name="SQL_BUOY_GET_LIFE">
+			SELECT * from subject_life where id=? 		
+		</statement>
+		<statement name="SQL_BUOY_GET_LIFE_PLATE">
+			SELECT * from subject_life where id=? and top_flag != 5		
+		</statement>
+		
+	</group>
+	
+	<group name="buoyGroup_write">
+		<statement name="SQL_BUOY_INSERT">
+			INSERT INTO subject_life (
+						id, 
+						top_flag, 
+						float_time,
+						can_change,
+						water_dragon,
+						main_plate,
+						last_time,
+						title,
+						color
+						)
+						VALUES
+						( ?, ?, ?,?,?,?,?,?,?);
+		</statement>
+		<statement name="SQL_BUOY_UPDATE_FLOATTIME">
+			UPDATE subject_life SET float_time=? WHERE id=? and main_plate=?					
+		</statement>
+		<statement name="SQL_BUOY_UPDATE_TITLE_COLOR">
+			UPDATE subject_life SET title=? , color=? WHERE id=?					
+		</statement>
+		<statement name="SQL_BUOY_UPDATE_FLAG">
+			UPDATE subject_life SET top_flag=? WHERE id=? and main_plate=?					
+		</statement>
+		<statement name="SQL_BUOY_DELETE">
+			DELETE FROM  subject_life  WHERE id=? and main_plate=?					
+		</statement>
+	</group>
+	
+	<group name="adGroup_read">
+		<statement name="SQL_AD_GET_LIST">
+			SELECT * from ad where top=? and is_show=?
+			and flag=? order by post_time desc limit ?,?
+		</statement>
+		
+		<statement name="SQL_AD_COUNT_LIST">
+			SELECT count(*) from ad where top=? and is_show=? and flag=? 
+		</statement>
+		
+			<statement name="SQL_AD_ALL_LIST">
+			SELECT * from ad where top=? and is_show=? and flag=?  order by post_time desc
+		</statement>
+		
+		<statement name="getAdById">
+			SELECT * from ad where id=? 
+		</statement>
+		
+		
+		<statement name="getValueByKey">
+			SELECT * from consts where consts.key=?
+		</statement>
+
+	
+	</group>
+	
+	<group name="adGroup_write">
+		<statement name="SQL_AD_UPDATE_BY_ID">
+
+			UPDATE mop.ad
+			SET
+			title = ? ,
+			url = ? ,
+			top = ?,
+			is_show = ?,
+			flag = ? ,
+			LEVEL = ? ,
+			post_time = ? ,
+			color = ?,
+			type=?
+			WHERE
+			id = ? ;
+		</statement>
+		<statement name="addNewAd">
+			INSERT INTO ad(	title,	url,top,is_show,flag,LEVEL,post_time,color,	TYPE)VALUES(?,?,?,?,?,?,?,?,?);
+		</statement>
+		
+		<statement name="updateValueByKey">
+			UPDATE consts set consts.value=? where consts.key=?
+		</statement>
+	</group>
+
+	<group name="dictGroup_read">
+		<statement name="DictDao.loadDict">
+			SELECT * from plate_dic
+		</statement>
+	</group>
+
+	<group name="selfGroup_read">
+		<statement name="LIST_USER_POST_SUBJECT">
+			SELECT subject_id FROM self_post WHERE user_id = ? order by post_time desc LIMIT ?,?
+	 	</statement>
+		<statement name="COUNT_USER_POST_SUBJECT">
+			SELECT count(id) FROM self_post WHERE user_id = ?  
+	 	</statement>
+		<statement name="LIST_USER_REPLY_SUBJECT">
+			SELECT * FROM self_reply WHERE user_id = ? order by reply_time desc LIMIT ?,?
+	 	</statement>
+		<statement name="COUNT_USER_REPLY_SUBJECT">
+			SELECT count(id) FROM self_reply WHERE user_id = ?  
+	 	</statement>
+	</group>
+	
+	<group name="selfGroup_write">
+		<statement name="ADD_USER_POST_SUBJECT">
+			INSERT INTO self_post (	user_id,subject_id,	post_time)VALUES(?,?,?);
+		</statement>
+		<statement name="ADD_USER_REPLY_SUBJECT">
+			INSERT INTO self_reply 	(user_id, subject_id,reply_time)VALUES( ?, ?, ?	);
+	 	</statement>
+	</group>
+	
+	<!-- 2011-01-04 与审核帖相关的 ...start-->
+	<group name="examSubjectGroup_read"> 
+		<statement name="SUBJECTEXAM.GETQUANTITYLIST_QUERY">
+			SELECT * FROM subject_exam limit ?
+		</statement> 
+		<statement name="SUBJECTEXAM.GETQUANTITYLISTMAINSUB_QUERY">
+			SELECT * FROM subject_exam where main_plate=? limit ?
+		</statement> 
+		
+		<statement name="SUBJECTEXAM.GETTASKLIST_UID">
+			SELECT * FROM exam_task B ,subject_exam A where A.sid = B.sid and B.admin_userid =? and B.exam_result =? limit ?
+		</statement>
+		<statement name="SUBJECTEXAM.GETTASKLISTMAINPLATE_UID">
+			SELECT * FROM exam_task B ,subject_exam A where A.sid = B.sid and B.admin_userid =? and B.exam_result =? and A.main_plate=? limit ?
+		</statement>
+		<statement name="SUBJECTEXAM.GETTASKLIST_EXAM">
+			SELECT * FROM exam_task B , subject_exam A where B.exam_result=? 
+		</statement>
+		<statement name="SUBJECTASKEXAM.GETTASKLIST_EXAM_QUERY">
+			SELECT * FROM exam_task B where B.exam_result = ? 
+		</statement>
+		<statement name="SUBJECTEXAM.GETTASKCOUNT_QUERY">
+			SELECT count(*) FROM exam_task
+		</statement> 
+		
+		<statement name="SUBJECTEXAM.GETEXAMRESULT_QUERY">   
+			SELECT * FROM exam_result where result >=?;
+		</statement>
+		<statement name="SUBJECTEXAM.GETSUBJECTEXAMRESULT_QUERY">   
+			SELECT * FROM exam_result B,subject_exam A where A.sid=B.sid and B.result =? limit ?;
+		</statement>
+		<statement name="SUBJECTEXAM.GETSUBJECTEXAMRESULTMAINSUB_QUERY">   
+			SELECT * FROM exam_result B,subject_exam A where A.sid=B.sid and B.result =? and A.main_plate=? limit ?;
+		</statement>
+		
+	</group>
+	
+	<group name="examSubjectGroup_write">
+		<statement name="SUBJECTEXAM.SAVEEXAM_INSERT">
+			INSERT INTO subject_exam(
+										sid,title,body,user_id,user_name,real_name,attrib,type,sub_plate,main_plate,ip
+									) values (?,?,?,?,?,?,?,?,?,?,?);
+		</statement> 
+		<statement name="SUBJECTEXAM.SUBJECTEXAMBYSID_DELETE">
+			DELETE from subject_exam  where sid = ?
+		</statement> 
+		<statement name="SUBJECTEXAM.SAVETASK_INSERT">
+			INSERT INTO exam_task(
+									sid,admin_userid,admin_username,exam_result,exam_type,exam_time
+								 ) values(?,?,?,?,?,?);
+		</statement> 
+		<statement name="TASKEXAM.TASKEXAMBYID_DELETE">
+			DELETE from exam_task  where id = ?
+		</statement> 
+		<statement name="TASKEXAM.TASKEXAMBYTIME_DELETE">
+			DELETE from exam_task  where exam_time =?
+		</statement> 
+		<statement name="TASKEXAM.TASKEXAMBYSID_DELETE">
+			DELETE from exam_task  where sid =?
+		</statement> 
+		<statement name="SUBJECTEXAM.UPDATASKEXAMRESULT_UPDATE">  
+			 UPDATE exam_task set exam_result=exam_result+?,exam_type=? where id =?; 
+		</statement> 
+		<statement name="SUBJECTEXAM.UPDAEXAMRESULT_UPDATE">   
+			UPDATE exam_result set result=result+?,type=? where sid =? and type=?;
+		</statement>
+		<statement name="SUBJECTEXAM.INSERTEXAMRESULT_INSERT">   
+			insert exam_result(sid,result,type) values(?,?,?);
+		</statement>
+		<statement name="SUBJECTEXAM.EXAMRESULTBYSID_DELETE">
+			DELETE from exam_result  where sid =?
+		</statement>  
+	</group>
+	
+	<!-- 2011-01-04 与审核帖相关的 ...end-->
+	<!-- 2011-01-18 与审核图片相关的..start -->
+	<group name="examPicGroup_read"> 
+		<statement name="EXAMPIC.PICLIST_QUERY">
+			SELECT * from exam_pic where post_time >=? and flag= ? limit ?
+		</statement> 
+		<statement name="EXAMPIC.PICLIST_MAINSUB_QUERY">
+			SELECT * from exam_pic where post_time >=? and flag= ? and mainsub=? limit ?
+		</statement> 
+		<statement name="EXAMPIC.PICLIST_FLAG_QUERY">
+			SELECT * from exam_pic where  flag > ? limit ?
+		</statement> 
+		<statement name="EXAMPIC.PICCOUNTFLAG_QUERY">
+			SELECT count(*) FROM exam_pic where post_time >=? and flag=?
+		</statement>
+		<statement name="EXAMPIC.PICCOUNTFLAG_MAINSUB_QUERY">
+			SELECT count(*) FROM exam_pic where post_time >=? and flag=? and mainsub=?
+		</statement>
+		<statement name="PICPURGE.PIC_QUERY">
+			SELECT * from pic_purge limit ?;
+		</statement>  
+		
+	</group> 
+	
+	<group name="examPicGroup_write">
+		<statement name="EXAMPIC.PICSAVE_INSERT">
+			INSERT INTO exam_pic(user_id,user_name,url,path,post_time,flag,mainsub) 
+			                     values(?,?,?,?,?,?,?);
+		</statement> 
+		<statement name="EXAMPIC.PIC_FLAG_UPDATE">
+			UPDATE  exam_pic set flag=? where id=?
+		</statement>
+		<statement name="EXAMPIC.PIC_ID_DELETE">
+			DELETE FROM exam_pic where id=?
+		</statement>  
+		<statement name="PICPURGE.PIC_INSERT">
+			INSERT INTO  pic_purge(url) values(?);
+		</statement>  
+		<statement name="PICPURGE.PIC_DELETE">
+			DELETE from pic_purge where id = ?;
+		</statement>  
+	</group>
+	<!-- 2011-01-18 与审核图片相关的..end -->
+	<!-- 2011-01-12 about mopper..start -->
+	<group name="hotReplyGroup_read"> 
+		<statement name="HOTREPLY.HOTREPLY_QUERY">
+			SELECT * from hot_reply where update_time =? limit ?
+		</statement> 
+	</group> 
+	<group name="hotReplyGroup_write"> 
+		<statement name="HOTREPLY.HOTREPLY_INSERT">
+			INSERT INTO hot_reply(sid,rid,update_time,ip,num,floor,filed4,filed3,filed2,filed1) 
+			                     values(?,?,?,?,?,?,?,?,?,?);
+		</statement> 
+		<statement name="HOTREPLY.HOTREPLY_UPDATE">
+			UPDATE hot_reply set num=num+1 where sid=? and rid =? and floor=?;
+		</statement> 
+	</group>
+	<!-- 2011-01-12 about mopper..end -->
+	<!-- datasource:数据源, 在这里显示地将语句分组绑定到数据源 -->
+	<datasource name="datasourceSlave">
+		<group>hotReplyGroup_read</group>
+		<group>examPicGroup_read</group>
+		<group>examSubjectGroup_read</group>
+		<group>selfGroup_read</group>
+		<group>adGroup_read</group>
+		<group>buoyGroup_read</group>
+		<group>cmsGroup_read</group>
+		<group>subjectGroup_read</group>
+		<group>dictGroup_read</group>
+		<group>subjectStatementGroup_read</group>
+		<group>UserStatementGroup_read</group>
+		<group>ReplyStatementGroup_read</group>
+		<group>UnionStatement_read</group>
+	</datasource>
+
+	<datasource name="datasource">
+		<group>hotReplyGroup_write</group>
+		<group>examPicGroup_write</group>
+		<group>examSubjectGroup_write</group>
+		<group>selfGroup_write</group>
+		<group>adGroup_write</group>
+		<group>buoyGroup_write</group>
+		<group>cmsGroup_write</group>
+		<group>subjectStatementGroup_write</group>
+		<group>UserStatementGroup_write</group>
+		<group>ReplyStatementGroup_write</group>
+		<group>UnionStatement_write</group>
+		
+	</datasource>
+
+</config>
